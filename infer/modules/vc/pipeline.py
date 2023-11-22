@@ -4,6 +4,7 @@ import traceback
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 from functools import lru_cache
 from time import time as ttime
@@ -143,9 +144,6 @@ class Pipeline(object):
             if not hasattr(self, "model_rmvpe"):
                 from infer.lib.rmvpe import RMVPE
 
-                logger.info(
-                    "Loading rmvpe model,%s" % "%s/rmvpe.pt" % os.environ["rmvpe_root"]
-                )
                 self.model_rmvpe = RMVPE(
                     "%s/rmvpe.pt" % os.environ["rmvpe_root"],
                     is_half=self.is_half,
@@ -442,7 +440,7 @@ class Pipeline(object):
         audio_opt = np.concatenate(audio_opt)
         if rms_mix_rate != 1:
             audio_opt = change_rms(audio, 16000, audio_opt, tgt_sr, rms_mix_rate)
-        if tgt_sr != resample_sr >= 16000:
+        if resample_sr >= 16000 and tgt_sr != resample_sr:
             audio_opt = librosa.resample(
                 audio_opt, orig_sr=tgt_sr, target_sr=resample_sr
             )

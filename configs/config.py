@@ -1,23 +1,11 @@
-import argparse
 import os
-import sys
 import json
 from multiprocessing import cpu_count
-
 import torch
-
-try:
-    import intel_extension_for_pytorch as ipex  # pylint: disable=import-error, unused-import
-
-    if torch.xpu.is_available():
-        from infer.modules.ipex import ipex_init
-
-        ipex_init()
-except Exception:  # pylint: disable=broad-exception-caught
-    pass
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 
 version_config_list = [
@@ -49,15 +37,6 @@ class Config:
         self.gpu_name = None
         self.json_config = self.load_config_json()
         self.gpu_mem = None
-        (
-            self.python_cmd,
-            self.listen_port,
-            self.iscolab,
-            self.noparallel,
-            self.noautoopen,
-            self.dml,
-        ) = self.arg_parse()
-        self.instead = ""
         self.x_pad, self.x_query, self.x_center, self.x_max = self.device_config()
 
     @staticmethod
@@ -67,39 +46,6 @@ class Config:
             with open(f"configs/{config_file}", "r") as f:
                 d[config_file] = json.load(f)
         return d
-
-    @staticmethod
-    def arg_parse() -> tuple:
-        exe = sys.executable or "python"
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--port", type=int, default=7865, help="Listen port")
-        parser.add_argument("--pycmd", type=str, default=exe, help="Python command")
-        parser.add_argument("--colab", action="store_true", help="Launch in colab")
-        parser.add_argument(
-            "--noparallel", action="store_true", help="Disable parallel processing"
-        )
-        parser.add_argument(
-            "--noautoopen",
-            action="store_true",
-            help="Do not open in browser automatically",
-        )
-        parser.add_argument(
-            "--dml",
-            action="store_true",
-            help="torch_dml",
-        )
-        cmd_opts = parser.parse_args()
-
-        cmd_opts.port = cmd_opts.port if 0 <= cmd_opts.port <= 65535 else 7865
-
-        return (
-            cmd_opts.pycmd,
-            cmd_opts.port,
-            cmd_opts.colab,
-            cmd_opts.noparallel,
-            cmd_opts.noautoopen,
-            cmd_opts.dml,
-        )
 
     # has_mps is only available in nightly pytorch (for now) and MasOS 12.3+.
     # check `getattr` and try it for compatibility
@@ -247,5 +193,5 @@ class Config:
                     )
                 except:
                     pass
-        print("is_half:%s, device:%s" % (self.is_half, self.device))
+                
         return x_pad, x_query, x_center, x_max
