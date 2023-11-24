@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "rvc-beta"
+name = "rvc"
 version = "0.1.0"
 description = ""
 authors = ["lj1995"]
